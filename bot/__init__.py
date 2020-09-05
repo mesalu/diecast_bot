@@ -23,11 +23,12 @@ class DieCastParser(object):
     Reiteration of grammar being targetted:
     S -> expr
     expr -> eps. | term | term term_tail
-    term -> diecast | constant
+    term -> diecast | constant | adv
     term_tail -> eps. | op expr
     constant -> (\d+)
     op -> [+-]
     diecast -> ((\d*)\s*d\s*(\d+))
+    adv -> 'adv' | 'advantage' | 'dis' | 'disadvantage'
     """
     # TODO: review notes and re-work this (if needed) to be in chomsky normal form.
 
@@ -75,7 +76,7 @@ class DieCastParser(object):
         Recursively walks through the node's tree structure yielding (and subyielding) terminal nodes
         as it discovers them.
         """
-        terminal_types = ("constant", "operator", "diecast")
+        terminal_types = ("constant", "operator", "diecast", "adv")
 
         if node.type in terminal_types:
             yield node
@@ -121,13 +122,18 @@ class DieCastParser(object):
         """
         Parses the term variable
 
-        term -> diecast | constant
+        term -> diecast | constant | adv
         """
         node = DieCastParser.ParseNode(text, "term")
+
+        # Spooky pyramid of death
         try:
             child, extra = self._diecast(text)
         except DieCastParser.ParseError:
-            child, extra =  self._const(text)
+            try:
+                child, extra =  self._const(text)
+            except DieCastParser.ParseError:
+                child, extra = self._adv(text)
 
         node.add_child(child)
         return node, extra
@@ -211,6 +217,23 @@ class DieCastParser(object):
 
         return node, match.group(4)
 
+    def _adv(self, text: str):
+        """
+        Parses a special diecast notatoin.
+
+        adv -> 'adv' | 'advantage' | 'dis' | 'disadvantage'
+        """
+        chunks = text.strip().split(maxsplit=1)
+        keyword = chunks[0]
+        text = chunks[1] if len(chunks) > 1 else ''
+
+        if keyword in ('advantage', 'disadvantage', 'adv', 'dis'):
+            node = DieCastParser.ParseNode(keyword[:3], 'adv')
+            return node, text
+
+        raise DieCastParser.ParseError("Expected keyphrase")
+
+
 class DieCastBot(discord.Client):
     def __init__(self, *args, **kwargs):
         discord.Client.__init__(self, *args, **kwargs)
@@ -222,7 +245,7 @@ class DieCastBot(discord.Client):
 
     async def on_message(self, message: discord.Message):
         # Check to make sure that we're not processing our own outbound message, and for now only operate on #bot_playground:
-        if not message.author == self.user and str(message.channel) == "bot_playground":
+        if not message.author == self.user and str(message.channel) == "dnd":
             # check if the message contains the magic phrase.
             chunks = message.content.strip().split()
             content = " ".join(chunks[1:])
@@ -256,8 +279,19 @@ class DieCastBot(discord.Client):
                     for node in tree.walk_terminal_nodes():
                         if node.type == "operator":
                             scalar = 1 if node.raw == "+" else -1 # NOTE: this line will be problematic if other operators added.
+
                         if node.type == "constant":
                             const_total += (scalar * int(node.raw))
+
+                        if node.type == "adv":
+                            # this is a special clause:
+                            functor = min if node.raw == "dis" else max
+                            rolls = [random.randint(1, 20) for _ in range(2)]
+                            result = scalar * functor(rolls)
+                            total += result
+                            components.append(rolls)
+                            num_casts += 2
+
                         if node.type == "diecast":
                             num_casts += node.n
                             if node.n > 1:
