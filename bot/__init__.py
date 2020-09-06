@@ -11,7 +11,7 @@ import re
 #       leading hyphens (for negative values) will be treated as an error.
 
 GREETINGS_LIST = ("Hey", "Greetings", "Hello", "Salutations", "Hola")
-RE_VALID   = re.compile(r"[\s\d+-d]*")
+RE_VALID   = re.compile(r"[\s\d+-d]*") # Not used after adding advantage and disadvantage rule.
 logging.basicConfig(level=logging.WARNING)
 
 # TODO: most of the functions in this class boil down to a try-except-fail pattern.
@@ -51,10 +51,6 @@ class DieCastParser(object):
             self.children.append(child)
 
     def __init__(self, text: str):
-        try:
-            RE_VALID.match(text)
-        except Exception:
-            raise DieCastParser.ParseError("Failed to validate all characters")
         self._raw = text
         self._start(text)
 
