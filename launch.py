@@ -4,7 +4,7 @@
 Quick launch point for the bot program.
 """
 
-from bot import DieCastBot
+from bot.client import DieCastBot
 import keyring
 
 if __name__ == "__main__":
