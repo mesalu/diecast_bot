@@ -189,7 +189,7 @@ class DieCastBot(discord.Client):
             return "I cannot add nobody to the blacklist, please use mentions to specify users (That way we don't make mistakes.)"
 
         self._blacklisted.update(to_blacklist)
-        return f"I have added [{', '.join([x.display_name for x in ctx.raw_message.mentions])}] to the blacklist, which now contains {len(self._blacklisted)} entries."
+        return f"I have added [{', '.join([x.display_name for x in ctx.raw_message.mentions])}] to the blacklist, which now contains {len(self._blacklisted)} entr{'y' if len(self._blacklisted) == 1 else 'ies'}."
 
     def _on_blacklist_remove(self, ctx, msg_contents: str) -> str:
         is_admin = ctx.sender.permissions_in(ctx.channel)
@@ -207,5 +207,5 @@ class DieCastBot(discord.Client):
 
         self._blacklisted.difference_update([x.id for x in to_release])
 
-        base_reply = f"I have removed [{', '.join([x.display_name for x in to_release])}] to the blacklist, which now contains {len(self._blacklisted)} entries.\n"
-        return base_reply + '\n'.join([f'Welcome back {x.mention}' for x in to_release])
+        base_reply = f"I have removed [{', '.join([x.display_name for x in to_release])}] from the blacklist, which now contains {len(self._blacklisted)} entr{'y' if len(self._blacklisted) == 1 else 'ies'}.\n"
+        return base_reply + '\n'.join([f'Welcome back {x.mention}!' for x in to_release])
