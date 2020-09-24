@@ -90,7 +90,7 @@ class DieCastBot(discord.Client):
         elapsed = f"{f'{days} days ' if days else ''}{f'{hours} hours ' if hours else ''}{f'{minutes} minutes ' if minutes else ''}{f'{seconds} seconds' if seconds else ''}"
 
         # adjust min and
-        return f"I have been running for: {elapsed}, and I have serviced {self._roll_request_counter} roll requets!"
+        return f"I have been running for: {elapsed}, and I have serviced {self._roll_request_counter} roll requests!"
 
     def _on_roll_request(self, ctx, msg_contents: str) -> str:
         """

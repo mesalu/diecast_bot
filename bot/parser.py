@@ -201,7 +201,7 @@ class DieCastParser(object):
         match = rgx.match(text)
         if match:
             node = DieCastParser.ParseNode(match.group(1), "diecast")
-            node.n = match.group(2) if match.group(2) else 1
+            node.n = match.group(2) if match.group(2) else '1'
             node.size = match.group(3)
 
         else:
